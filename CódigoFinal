@@ -1,0 +1,306 @@
+ //Motor izquierda
+#define pin1  5
+#define pin2  3
+ 
+ //Motor derecho
+#define pin3 9
+#define pin4 6
+
+int distanciamax = 30;
+float distcerca = 16;
+//Sensor Ultrasónico frontal
+#define trig1 8
+#define echo1 4
+long tiempoUS1 = 0;
+float distancia1 = 0;
+//Sensor Ultrasónico izquierdp
+#define  trig2 10
+#define  echo2 11
+long tiempoUS2 = 0;
+float distancia2 = 0;
+//Sensor Ultrasónico derecho
+#define  trig3 12
+#define  echo3 13
+long tiempoUS3 = 0;
+float distancia3 = 0;
+//Infrarrojo
+#define infraAO A0
+int ir1 = 0;
+bool white;
+
+#define boton 0
+//#define foco 13
+bool encendido;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+ 
+  pinMode(trig1, OUTPUT);
+  pinMode(echo1, INPUT);
+  pinMode(trig2, OUTPUT);
+  pinMode(echo2, INPUT);
+  pinMode(trig3, OUTPUT);
+  pinMode(echo3, INPUT);
+
+  pinMode(pin1, OUTPUT);
+  pinMode(pin2, OUTPUT);
+  pinMode(pin3, OUTPUT);
+  pinMode(pin4, OUTPUT);
+
+  pinMode(infraAO, INPUT);
+
+
+    Serial.print("apagado");
+  while(true)
+  {
+    encendido = digitalRead(boton);
+    if (encendido == false)
+    {
+      Serial.print("encendido");
+     
+      break;
+    }
+  }
+  //digitalWrite(foco, HIGH);
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  Serial.print("Distancia1: ");
+  Serial.print(distancia1);
+  Serial.print(" Distancia2: ");
+  Serial.print(distancia2);
+  Serial.print( " Distancia3: ");
+  Serial.println(distancia3);
+
+  secuenciaBase();
+
+
+}
+
+void secuenciaBase()
+{
+  distancia1 = distanciaUS1();
+  distancia2 = distanciaUS2();
+  distancia3 = distanciaUS3();
+  //float distmedia = (distancia+distancia2)/2;
+
+  bool frente = distancia1 > distcerca;
+  bool izquierda = distancia2 > distcerca;
+  bool derecha = distancia3 > distcerca;
+
+
+  irsensor1();
+
+  int delaytime = 850;
+  int delaystop = 300;
+
+  if (white == true)
+  {
+    if (frente) 
+    {
+      if (izquierda && derecha)
+      {
+        stop();
+        delay(delaystop);
+        girarderecha();
+        delay(delaytime);
+      }
+      else if (!izquierda && !derecha)
+      {
+        avance();
+        delay(200);
+      }
+      else if (izquierda && !derecha)
+      {
+        stop();
+        delay(delaystop);
+        girarizq();
+        delay(delaytime);
+      }
+      else if (!izquierda && derecha)
+      {
+        stop();
+        delay(delaystop);
+        girarderecha();
+        delay(delaytime);
+      }
+    }
+    //Pared al frente
+    else
+    {
+      if (izquierda && derecha)
+      {
+        stop();
+        delay(delaystop);
+        girarderecha();
+        delay(delaytime);
+      }
+      else if (!izquierda && !derecha)
+      {
+        stop();
+        delay(delaystop);
+        girarpropioeje();
+        delay(200);
+      }
+      else if (izquierda && !derecha)
+      {
+        stop();
+        delay(delaystop);
+        girarizq();
+        delay(delaytime);
+      }
+      else if (!izquierda && derecha)
+      {
+        stop();
+        delay(delaystop);
+        girarderecha();
+        delay(delaytime);
+      }
+
+    }
+
+  }
+  else
+  {
+    stop();
+    delay(delaystop);
+    reversa();
+    delay(1000);
+    girarderecha();
+    delay(delaytime);
+
+    /*
+    while (true)
+    {
+      stop();
+      delay(1000);
+    }
+    */
+  }
+
+}
+
+float distanciaUS1()
+{
+  digitalWrite(trig1, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig1, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig1, LOW);
+ 
+  tiempoUS1 = pulseIn(echo1, HIGH);
+  distancia1 = (tiempoUS1/2) / 29.2;
+  return distancia1;
+}
+float distanciaUS2()
+{
+  digitalWrite(trig2, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig2, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig2, LOW);
+ 
+  tiempoUS2 = pulseIn(echo2, HIGH);
+  distancia2 = (tiempoUS2/2) / 29.2;
+  return distancia2;
+}
+float distanciaUS3()
+{
+  digitalWrite(trig3, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig3, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig3, LOW);
+ 
+  tiempoUS3 = pulseIn(echo3, HIGH);
+  distancia3 = (tiempoUS3/2) / 29.2;
+  return distancia3;
+}
+
+void irsensor1()
+{
+  ir1 = analogRead(infraAO);
+  if (ir1 < 100)
+  {
+    white = true;
+    Serial.print("Blanco ");
+  }
+  else
+  {
+    white = false;
+    Serial.print("Negro ");
+  }
+}
+
+//Movimiento
+void avance()
+{
+  Serial.print("Avanzar ");
+  analogWrite(pin1, 90);
+  analogWrite(pin2, 0);
+  analogWrite(pin3, 85);
+  analogWrite(pin4, 0);
+}
+void reversa()
+{
+  Serial.print("Reversa ");
+  analogWrite(pin1, 0);
+  analogWrite(pin2, 70);
+  analogWrite(pin3, 0);
+  analogWrite(pin4, 85);
+}
+void stop()
+{
+    Serial.print("stop ");
+    analogWrite(pin1, 0);
+    analogWrite(pin2, 0);
+    analogWrite(pin3, 0);
+    analogWrite(pin4, 0);
+}
+void girarpropioeje()
+{
+  Serial.print("Girar sobre propio eje ");
+  analogWrite(pin1, 80);
+  analogWrite(pin2, 0);
+  analogWrite(pin3, 0);
+  analogWrite(pin4, 100);
+}
+void girarderecha()
+{
+  Serial.print("Girar derecha ");
+  analogWrite(pin1, 120);
+  analogWrite(pin2, 0);
+  analogWrite(pin3, 0);
+  analogWrite(pin4, 0);
+}
+void girarizq()
+{
+  Serial.print("Girar izquierda ");
+  analogWrite(pin1, 0);
+  analogWrite(pin2, 0);
+  analogWrite(pin3, 120);
+  analogWrite(pin4, 0);
+}
+
+
+    /*
+    if ((frente && izquierda && derecha) || (frente && !izquierda && !derecha)) 
+    {
+      avance();
+      delay(delaytime);
+    }
+    else if (frente && izquierda && !derecha) 
+    {
+      girarizq();
+      delay(delaytime);
+    }
+    else if (frente && !izquierda && derecha) 
+    {
+      girarderecha();
+      delay(delaytime);
+    }
+    */
