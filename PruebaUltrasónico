@@ -1,0 +1,40 @@
+
+//Sensor Ultrasónico izquierdp
+#define  trig2 10
+#define  echo2 11
+long tiempoUS2 = 0;
+float distancia2 = 0;
+
+void setup() {
+  // put your setup code here, to run once:
+Serial.begin(9600);
+
+  pinMode(trig2, OUTPUT);
+  pinMode(echo2, INPUT);  
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  distancia2 = distanciaUS2();
+  Serial.print(" Distancia2: ");
+  Serial.println(distancia2);
+  delay(500);
+
+
+}
+
+
+float distanciaUS2()
+{
+  digitalWrite(trig2, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig2, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig2, LOW);
+ 
+  tiempoUS2 = pulseIn(echo2, HIGH);
+  distancia2 = (tiempoUS2/2) / 29.2;
+  return distancia2;
+}
