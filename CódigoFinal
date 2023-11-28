@@ -7,7 +7,8 @@
 #define pin4 6
 
 int distanciamax = 30;
-float distcerca = 16;
+float distcerca = 10;
+int distmin = 3;
 //Sensor Ultrasónico frontal
 #define trig1 8
 #define echo1 4
@@ -88,6 +89,7 @@ void secuenciaBase()
   distancia3 = distanciaUS3();
   //float distmedia = (distancia+distancia2)/2;
 
+  bool choque = distancia1 < distmin;
   bool frente = distancia1 > distcerca;
   bool izquierda = distancia2 > distcerca;
   bool derecha = distancia3 > distcerca;
@@ -95,8 +97,9 @@ void secuenciaBase()
 
   irsensor1();
 
-  int delaytime = 850;
+  int delaytime = 810;
   int delaystop = 300;
+  int delayvuelta = 200;
 
   if (white == true)
   {
@@ -104,6 +107,7 @@ void secuenciaBase()
     {
       if (izquierda && derecha)
       {
+        delay(delayvuelta);
         stop();
         delay(delaystop);
         girarderecha();
@@ -116,6 +120,7 @@ void secuenciaBase()
       }
       else if (izquierda && !derecha)
       {
+        delay(delayvuelta);
         stop();
         delay(delaystop);
         girarizq();
@@ -123,6 +128,7 @@ void secuenciaBase()
       }
       else if (!izquierda && derecha)
       {
+        delay(delayvuelta);
         stop();
         delay(delaystop);
         girarderecha();
@@ -130,10 +136,11 @@ void secuenciaBase()
       }
     }
     //Pared al frente
-    else
+    else if (!frente && !choque)
     {
       if (izquierda && derecha)
       {
+        delay(delayvuelta);
         stop();
         delay(delaystop);
         girarderecha();
@@ -144,10 +151,11 @@ void secuenciaBase()
         stop();
         delay(delaystop);
         girarpropioeje();
-        delay(200);
+        delay(delaytime);
       }
       else if (izquierda && !derecha)
       {
+        delay(delayvuelta);
         stop();
         delay(delaystop);
         girarizq();
@@ -155,6 +163,7 @@ void secuenciaBase()
       }
       else if (!izquierda && derecha)
       {
+        delay(delayvuelta);
         stop();
         delay(delaystop);
         girarderecha();
@@ -162,16 +171,19 @@ void secuenciaBase()
       }
 
     }
+    else if (choque)
+    {
+    stop();
+    delay(delaystop);
+    reversa();
+    delay(600);
+    }
 
   }
   else
   {
     stop();
-    delay(delaystop);
-    reversa();
     delay(1000);
-    girarderecha();
-    delay(delaytime);
 
     /*
     while (true)
@@ -224,7 +236,7 @@ float distanciaUS3()
 void irsensor1()
 {
   ir1 = analogRead(infraAO);
-  if (ir1 < 100)
+  if (ir1 < 40)
   {
     white = true;
     Serial.print("Blanco ");
@@ -234,6 +246,7 @@ void irsensor1()
     white = false;
     Serial.print("Negro ");
   }
+  Serial.print(ir1);
 }
 
 //Movimiento
@@ -242,7 +255,7 @@ void avance()
   Serial.print("Avanzar ");
   analogWrite(pin1, 90);
   analogWrite(pin2, 0);
-  analogWrite(pin3, 85);
+  analogWrite(pin3, 89);
   analogWrite(pin4, 0);
 }
 void reversa()
